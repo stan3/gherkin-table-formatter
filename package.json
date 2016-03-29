@@ -1,9 +1,9 @@
 {
-  "name": "markdown-table-formatter",
-  "main": "./lib/markdown-table-formatter",
-  "version": "2.8.0",
-  "description": "A simple markdown plugin to format tables.",
-  "repository": "https://github.com/fcrespo82/atom-markdown-table-formatter",
+  "name": "gherkin-table-formatter",
+  "main": "./lib/gherkin-table-formatter",
+  "version": "0.0.1",
+  "description": "A simple plugin to format tables in gherkin.",
+  "repository": "https://github.com/stan3/gherkin-table-formatter",
   "license": "MIT",
   "engines": {
     "atom": ">=1.0.0 <2.0.0"

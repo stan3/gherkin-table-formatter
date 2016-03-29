@@ -13,37 +13,27 @@ class TableFormatter
 
   constructor: ->
     @subscriptions = new CompositeDisposable
+    @autoSelectEntireDocument = false
     @initConfig()
-    atom.workspace.observeTextEditors (editor) =>
-      @subscriptions.add editor.getBuffer().onWillSave =>
-        @format editor, true if @formatOnSave
 
   readConfig: (key, callback) ->
-    key = 'markdown-table-formatter.' + key
+    key = 'gherkin-table-formatter.' + key
     @subscriptions.add atom.config.onDidChange key, callback
     callback
       newValue: atom.config.get(key)
       oldValue: undefined
 
   initConfig: ->
-    @readConfig "autoSelectEntireDocument", ({newValue}) =>
-      @autoSelectEntireDocument = newValue
     @readConfig "spacePadding", ({newValue}) =>
       @spacePadding = newValue
-    @readConfig "keepFirstAndLastPipes", ({newValue}) =>
-      @keepFirstAndLastPipes = newValue
-    @readConfig "formatOnSave", ({newValue}) =>
-      @formatOnSave = newValue
-    @readConfig "defaultTableJustification", ({newValue}) =>
-      @defaultTableJustification = newValue
-    @readConfig "markdownGrammarScopes", ({newValue}) =>
-      @markdownGrammarScopes = newValue
+    @readConfig "gherkinGrammarScopes", ({newValue}) =>
+      @gherkinGrammarScopes = newValue
 
   destroy: ->
     @subscriptions.dispose()
 
   format: (editor, force) ->
-    if not (editor.getGrammar().scopeName in @markdownGrammarScopes)
+    if not (editor.getGrammar().scopeName in @gherkinGrammarScopes)
       return
 
     selectionsRanges = editor.getSelectedBufferRanges()
@@ -54,7 +44,7 @@ class TableFormatter
     if force or (selectionsRangesEmpty and @autoSelectEntireDocument)
       selectionsRanges = [bufferRange]
     else
-      selectionsRanges=
+      selectionsRanges =
         for srange in selectionsRanges when not (srange.isEmpty() and
             @autoSelectEntireDocument)
           start = bufferRange.start
@@ -86,43 +76,25 @@ class TableFormatter
       str.split '|'
 
     addTailPipes = (str) =>
-      if @keepFirstAndLastPipes
-        "|#{str}|"
-      else
-        str
+      "|#{str}|"
 
     joinCells = (arr) ->
       arr.join '|'
 
-    formatline = text[2].trim()
-    headerline = text[1].trim()
+    indent = /^\s*/.exec(text[0])[0]
+    lines = text[0].trim().split('\n')
 
-    [formatrow, data] =
-      if headerline.length is 0
-        [ 0, text[3] ]
+    comments = []
+    data_lines = []
+    for line, index in lines
+      if line.trim().startsWith('#')
+        comments.push(index)
       else
-        [ 1, text[1] + text[3] ]
-    lines = data.trim().split('\n')
+        data_lines.push(line)
 
-    justify = for cell in splitCells stripTailPipes formatline
-      [first, ..., last] = cell.trim()
-      switch ends = (first ? ':') + (last ? '-')
-        when '::', '-:' then ends
-        when '--'
-          if @defaultTableJustification == 'Left'
-            ':-'
-          else if @defaultTableJustification == 'Center'
-            '::'
-          else if @defaultTableJustification == 'Right'
-            '-:'
-          else
-            ':-'
-        else
-          ':-'
+    columns = (splitCells stripTailPipes data_lines[0]).length
 
-    columns = justify.length
-
-    content = for line in lines
+    content = for line in data_lines
       cells =  splitCells stripTailPipes line
       #put all extra content into last cell
       cells[columns - 1] = joinCells cells.slice(columns - 1)
@@ -136,53 +108,13 @@ class TableFormatter
 
     just = (string, col) ->
       length = widths[col] - swidth(string)
-      switch justify[col]
-        when '::'
-          [front, back] = padding
-          padding(length / 2) + string + padding((length + 1) / 2)
-        when '-:'
-          padding(length) + string
-        when ':-'
-          string + padding(length)
-        else
-          string
+      string + padding(length)
 
     formatted = for cells in content
       addTailPipes joinCells (just(cells[i], i) for i in [0..columns - 1])
+    formatted.splice(index, 0, lines[index].trim()) for index in comments
+    formatted = for line in formatted
+      indent + line
+    return formatted.join('\n') + '\n'
 
-    formatline = addTailPipes joinCells (
-      for i in [0..columns - 1]
-        [front, back] = justify[i]
-        front + padding(widths[i] - 2, '-') + back
-      )
-
-    formatted.splice(formatrow, 0, formatline)
-
-    return (if headerline.length is 0 and text[1] isnt '' then '\n' else '') +
-      formatted.join('\n') + '\n'
-
-  regex: ///
-    ( # header capture
-      (?:
-        (?:[^\n]*?\|[^\n]*)       # line w/ at least one pipe
-        \ *                       # maybe trailing whitespace
-      )?                          # maybe header
-      (?:\r?\n|^)                 # newline
-    )
-    ( # format capture
-      (?:
-        \|\ *(?::?-+:?|::)\ *            # format starting w/pipe
-        |\|?(?:\ *(?::?-+:?|::)\ *\|)+   # or separated by pipe
-      )
-      (?:\ *(?::?-+:?|::)\ *)?           # maybe w/o trailing pipe
-      \ *                         # maybe trailing whitespace
-      \r?\n                       # newline
-    )
-    ( # body capture
-      (?:
-        (?:[^\n]*?\|[^\n]*)       # line w/ at least one pipe
-        \ *                       # maybe trailing whitespace
-        (?:\r?\n|$)               # newline
-      )+ # at least one
-    )
-    ///g
+  regex: /(?:(?:(?:.*\|.*)|(?:\s*\#.*))\n)+/

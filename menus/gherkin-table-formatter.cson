@@ -3,9 +3,9 @@
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'Markdown Table Formatter'
+      'label': 'Gherkin Table Formatter'
       'submenu': [
-        { 'label': 'Format', 'command': 'markdown-table-formatter:format' }
+        { 'label': 'Format', 'command': 'gherkin-table-formatter:format' }
       ]
     ]
   }
