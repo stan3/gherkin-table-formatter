@@ -1,7 +1,7 @@
 {
   "name": "gherkin-table-formatter",
   "main": "./lib/gherkin-table-formatter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A simple plugin to format tables in gherkin.",
   "repository": "https://github.com/stan3/gherkin-table-formatter",
   "license": "MIT",
