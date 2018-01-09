@@ -9,7 +9,7 @@ module.exports =
           'How many spaces between left and right of each column content'
       gherkinGrammarScopes:
         type: 'array'
-        default: ['source.feature']
+        default: ['source.feature', 'text.gherkin.feature']
         description:
           'File grammar scopes that will be considered Gherkin by this package (comma-separated).
           Run \'Editor: Log Cursor Scope\' command to see what grammar scope
