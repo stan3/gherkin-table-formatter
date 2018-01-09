@@ -12,7 +12,7 @@ module.exports =
         default: ['source.feature', 'text.gherkin.feature']
         description:
           'File grammar scopes that will be considered Gherkin by this package (comma-separated).
-          Run \'Editor: Log Cursor Scope\' command to see what grammar scope
+          Open the Command Palette and run \'Editor: Log Cursor Scope\' to see what grammar scope
           is used by your grammar. Top entry is usually file grammar scope.'
         items:
           type: 'string'
