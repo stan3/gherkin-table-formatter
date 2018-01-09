@@ -6,4 +6,4 @@ Based on the [Markdown table formatter plugin](https://github.com/fcrespo82/atom
 
 ## Usage
 
-Select the table you want to format and them hit `alt-shift-T` to format it.
+Select the table you want to format and them hit `alt-shift-t` to format it.
